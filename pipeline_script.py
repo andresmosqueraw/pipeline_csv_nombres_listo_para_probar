@@ -27,7 +27,7 @@ def main():
 
     try:
         # 3. Crear/verificar la tabla
-        crear_tabla(conn, TABLE_NAME)
+        crear_tabla(conn, TABLE_NAME, SCHEMA_NAME_CSV)
 
         # 4. Insertar los datos desde el CSV local "zambrano.csv"
         insertar_datos_csv(conn, CSV_PATH, TABLE_NAME, SCHEMA_NAME_CSV)
