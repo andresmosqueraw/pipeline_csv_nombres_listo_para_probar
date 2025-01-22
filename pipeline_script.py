@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import csv
+import psycopg2.extras
 
 def main():
     # Datos cambiantes
@@ -65,8 +66,11 @@ def insertar_datos_csv(conn, ruta_csv, table_name, schema_name):
             t_ili_tid,
             i_primer_nombre
         )
-        VALUES (%s, %s);
+        VALUES %s;
     """
+
+    batch_size = 1000  # Ajusta el tamaño del batch según sea necesario
+    batch = []
 
     try:
         with open(ruta_csv, mode='r', encoding='utf-8') as f:
@@ -80,11 +84,16 @@ def insertar_datos_csv(conn, ruta_csv, table_name, schema_name):
                         print(f"Fila inválida: {fila}")
                         continue
 
-                    valores = (
-                        t_ili_tid,
-                        i_primer_nombre
-                    )
-                    cursor.execute(insert_query, valores)
+                    batch.append((t_ili_tid, i_primer_nombre))
+
+                    if len(batch) >= batch_size:
+                        psycopg2.extras.execute_values(cursor, insert_query, batch)
+                        batch = []
+
+                # Insertar cualquier dato restante
+                if batch:
+                    psycopg2.extras.execute_values(cursor, insert_query, batch)
+
             conn.commit()
         print(f"Datos insertados correctamente desde {ruta_csv} en la tabla {schema_name}.{table_name}")
     except Exception as e:
