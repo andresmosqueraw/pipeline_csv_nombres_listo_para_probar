@@ -6,7 +6,9 @@ def main():
     # Datos cambiantes
     CSV_PATH = "CSVs/procesamiento_interesados_cubarral.csv"
     TABLE_NAME = "cubarral"
-
+    SCHEMA_NAME_CSV = "ia_real_data2"
+    SCHEMA_NAME_FINAL = "final2"
+    
     # 1. Leer variables de entorno (colocadas en el workflow)
     dbname = os.environ["DB_NAME"]
     user = os.environ["DB_USER"]
@@ -28,21 +30,21 @@ def main():
         crear_tabla(conn, TABLE_NAME)
 
         # 4. Insertar los datos desde el CSV local "zambrano.csv"
-        insertar_datos_csv(conn, CSV_PATH, TABLE_NAME)
+        insertar_datos_csv(conn, CSV_PATH, TABLE_NAME, SCHEMA_NAME_CSV)
 
         # 5. Crear la tabla final donde se insertaran los datos resultantes del modelo de IA
-        crear_tabla_final(conn, TABLE_NAME)
+        crear_tabla_final(conn, TABLE_NAME, SCHEMA_NAME_FINAL)
 
     except Exception as e:
         print(f"Ocurrió un error en el pipeline: {e}")
     finally:
         conn.close()
 
-def crear_tabla(conn, table_name):
+def crear_tabla(conn, table_name, schema_name):
     create_table_query = f"""
-    CREATE SCHEMA IF NOT EXISTS ia_real_data;
+    CREATE SCHEMA IF NOT EXISTS {schema_name};
 
-    CREATE TABLE IF NOT EXISTS ia_real_data.{table_name} (
+    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
         id SERIAL4 NOT NULL,
         t_ili_tid VARCHAR NULL,
         i_primer_nombre VARCHAR NULL,
@@ -52,14 +54,14 @@ def crear_tabla(conn, table_name):
     with conn.cursor() as cursor:
         cursor.execute(create_table_query)
     conn.commit()
-    print(f"Tabla 'ia_real_data.{table_name}' verificada/creada con éxito.")
+    print(f"Tabla '{schema_name}.{table_name}' verificada/creada con éxito.")
 
-def insertar_datos_csv(conn, ruta_csv, table_name):
+def insertar_datos_csv(conn, ruta_csv, table_name, schema_name):
     CSV_COL_TID = "t_l_id"
     CSV_COL_NOMBRE = "primer_nombre"
 
     insert_query = f"""
-        INSERT INTO ia_real_data.{table_name} (
+        INSERT INTO {schema_name}.{table_name} (
             t_ili_tid,
             i_primer_nombre
         )
@@ -79,13 +81,13 @@ def insertar_datos_csv(conn, ruta_csv, table_name):
                 )
                 cursor.execute(insert_query, valores)
         conn.commit()
-    print(f"Datos insertados correctamente desde {ruta_csv} en la tabla {table_name}")
+    print(f"Datos insertados correctamente desde {ruta_csv} en la tabla {schema_name}.{table_name}")
 
-def crear_tabla_final(conn, table_name):
+def crear_tabla_final(conn, table_name, schema_name):
     create_table_query = f"""
-    CREATE SCHEMA IF NOT EXISTS final;
+    CREATE SCHEMA IF NOT EXISTS {schema_name};
     
-    CREATE TABLE IF NOT EXISTS final.{table_name} (
+    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
         t_id_interesado varchar NOT NULL,
         nombre_apellido varchar NOT NULL,
         nombre_1 varchar NULL,
@@ -100,7 +102,7 @@ def crear_tabla_final(conn, table_name):
     with conn.cursor() as cursor:
         cursor.execute(create_table_query)
     conn.commit()
-    print(f"Tabla 'final.{table_name}' verificada/creada con éxito.")
+    print(f"Tabla '{schema_name}.{table_name}' verificada/creada con éxito.")
 
 
 if __name__ == "__main__":
