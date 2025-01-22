@@ -57,8 +57,8 @@ def crear_tabla(conn, table_name, schema_name):
     print(f"Tabla '{schema_name}.{table_name}' verificada/creada con éxito.")
 
 def insertar_datos_csv(conn, ruta_csv, table_name, schema_name):
-    CSV_COL_TID = "t_l_id"
-    CSV_COL_NOMBRE = "primer_nombre"
+    CSV_COL_TID = "t_ili_tid"
+    CSV_COL_NOMBRE = "i_primer_nombre"
 
     insert_query = f"""
         INSERT INTO {schema_name}.{table_name} (
@@ -68,20 +68,27 @@ def insertar_datos_csv(conn, ruta_csv, table_name, schema_name):
         VALUES (%s, %s);
     """
 
-    with open(ruta_csv, mode='r', encoding='utf-8') as f:
-        lector = csv.DictReader(f)
-        with conn.cursor() as cursor:
-            for fila in lector:
-                t_ili_tid = fila.get(CSV_COL_TID, "")
-                i_primer_nombre = fila.get(CSV_COL_NOMBRE, "")
+    try:
+        with open(ruta_csv, mode='r', encoding='utf-8') as f:
+            lector = csv.DictReader(f)
+            with conn.cursor() as cursor:
+                for fila in lector:
+                    t_ili_tid = fila.get(CSV_COL_TID, "")
+                    i_primer_nombre = fila.get(CSV_COL_NOMBRE, "")
 
-                valores = (
-                    t_ili_tid,
-                    i_primer_nombre
-                )
-                cursor.execute(insert_query, valores)
-        conn.commit()
-    print(f"Datos insertados correctamente desde {ruta_csv} en la tabla {schema_name}.{table_name}")
+                    if not t_ili_tid or not i_primer_nombre:
+                        print(f"Fila inválida: {fila}")
+                        continue
+
+                    valores = (
+                        t_ili_tid,
+                        i_primer_nombre
+                    )
+                    cursor.execute(insert_query, valores)
+            conn.commit()
+        print(f"Datos insertados correctamente desde {ruta_csv} en la tabla {schema_name}.{table_name}")
+    except Exception as e:
+        print(f"Error al insertar datos: {e}")
 
 def crear_tabla_final(conn, table_name, schema_name):
     create_table_query = f"""
