@@ -7,8 +7,8 @@ def main():
     # Datos cambiantes
     CSV_PATH = "CSVs/procesamiento_interesados_cubarral.csv"
     TABLE_NAME = "cubarral"
-    SCHEMA_NAME_CSV = "ia_real_data2"
-    SCHEMA_NAME_FINAL = "final2"
+    SCHEMA_NAME_CSV = "ia_real_data"
+    SCHEMA_NAME_FINAL = "final"
     
     # 1. Leer variables de entorno (colocadas en el workflow)
     dbname = os.environ["DB_NAME"]
@@ -30,8 +30,12 @@ def main():
         # 3. Crear/verificar la tabla
         crear_tabla(conn, TABLE_NAME, SCHEMA_NAME_CSV)
 
-        # 4. Insertar los datos desde el CSV local "zambrano.csv"
-        insertar_datos_csv(conn, CSV_PATH, TABLE_NAME, SCHEMA_NAME_CSV)
+        # 4. Verificar si la tabla ya tiene datos
+        if not tabla_tiene_datos(conn, TABLE_NAME, SCHEMA_NAME_CSV):
+            # Insertar los datos desde el CSV local
+            insertar_datos_csv(conn, CSV_PATH, TABLE_NAME, SCHEMA_NAME_CSV)
+        else:
+            print(f"La tabla {SCHEMA_NAME_CSV}.{TABLE_NAME} ya contiene datos. No se insertarán nuevos datos.")
 
         # 5. Crear la tabla final donde se insertaran los datos resultantes del modelo de IA
         crear_tabla_final(conn, TABLE_NAME, SCHEMA_NAME_FINAL)
@@ -56,6 +60,13 @@ def crear_tabla(conn, table_name, schema_name):
         cursor.execute(create_table_query)
     conn.commit()
     print(f"Tabla '{schema_name}.{table_name}' verificada/creada con éxito.")
+
+def tabla_tiene_datos(conn, table_name, schema_name):
+    query = f"SELECT COUNT(*) FROM {schema_name}.{table_name};"
+    with conn.cursor() as cursor:
+        cursor.execute(query)
+        count = cursor.fetchone()[0]
+    return count > 0
 
 def insertar_datos_csv(conn, ruta_csv, table_name, schema_name):
     CSV_COL_TID = "t_ili_tid"
@@ -119,7 +130,6 @@ def crear_tabla_final(conn, table_name, schema_name):
         cursor.execute(create_table_query)
     conn.commit()
     print(f"Tabla '{schema_name}.{table_name}' verificada/creada con éxito.")
-
 
 if __name__ == "__main__":
     main()
