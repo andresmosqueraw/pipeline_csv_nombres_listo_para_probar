@@ -1,0 +1,32 @@
+name: pipeline-zambrano
+
+on:
+  push:
+    branches:
+      - main   # o la rama que uses
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run pipeline script
+        run: python pipeline_script.py
+        env:
+          # Estas variables tomarán su valor desde los "Secrets" de tu repositorio,
+          # para NO exponer credenciales en claro.
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
