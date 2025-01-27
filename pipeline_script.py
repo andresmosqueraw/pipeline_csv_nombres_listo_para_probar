@@ -5,8 +5,8 @@ import psycopg2.extras
 
 def main():
     # Datos cambiantes
-    CSV_PATH = "CSVs/procesamiento_interesados_cabuyaro.csv"
-    TABLE_NAME = "cabuyaro"
+    CSV_PATH = "CSVs/procesamiento_interesados_colombia.csv"
+    TABLE_NAME = "colombia"
     SCHEMA_NAME_CSV = "ia_real_data"
     SCHEMA_NAME_FINAL = "final"
     
